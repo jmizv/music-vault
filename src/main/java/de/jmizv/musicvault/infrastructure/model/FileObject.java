@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
@@ -266,5 +267,9 @@ public class FileObject {
 
     public void setHashChecked(Instant hashChecked) {
         this.hashChecked = hashChecked;
+    }
+
+    public String fullPath() {
+        return getPath() + File.separator + getFilename();
     }
 }

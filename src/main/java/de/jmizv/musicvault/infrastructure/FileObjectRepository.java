@@ -14,4 +14,6 @@ public interface FileObjectRepository extends CrudRepository<FileObject, BigDeci
 
     @Query(value = "SELECT fo FROM FileObject fo WHERE path LIKE concat(?1,'%')")
     List<FileObject> findAll(String path);
+
+    FileObject findByHash(String hash);
 }

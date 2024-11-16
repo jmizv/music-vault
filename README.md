@@ -12,6 +12,18 @@ Questions this will answer:
 * Do I have scrobbled my MP3 files at least once?
 * Are there any digital copies missing for some artists?
 
+## Running
+
+The application supports currently:
+- checking for missing files (those will be removed from the database)
+  - `-m`
+- check the consistency of the file on the hard disk
+  - `-c`
+- checking for new files (those will be added to the database)
+  - `-n`
+
+Note that depending on the size of your Music collection, the whole process can take a plenty of time. 
+
 ## Details
 
 ### Configuration
@@ -39,6 +51,9 @@ Currently, it is not supported to have more than one base folder.
 
 This project works with a PostgreSQL database. Find the `src/main/resources/datamodel.sql` for the datamodel used. Note
 that the data model is not applied automatically at first start of the app.
+
+MP3 files will be added to the database with their hashes. There is a unique constraint on that column so you cannot
+add the same MP3 from different folders.
 
 ### App
 

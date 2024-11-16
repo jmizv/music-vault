@@ -30,12 +30,11 @@ public class FileObjectService {
         if (comment != null && comment.length() > 4000) {
             comment = comment.replace("  ", " ").replace("\n\n", "\n");
             if (comment.length() > 4000) {
-                System.err.println("Comment has a length of " + comment.length() + " in file " + fileObject.getPath() + "/" + fileObject.getFilename());
+                log.error("Comment has a length of {} in file {}/{}", comment.length(), fileObject.getPath(), fileObject.getFilename());
                 comment = comment.substring(0, 4000);
             }
             fileObject.setComment(comment);
         }
-        log.info("Save object {} / {}", fileObject.getPath(), fileObject.getFilename());
         return _fileObjectRepository.save(fileObject);
     }
 
@@ -68,7 +67,7 @@ public class FileObjectService {
                 .filter(o -> o.getDuration() != null)
                 .filter(o -> o.getArtist() != null)
                 .filter(o -> o.getDuration() >= 31)
-                .map(o -> new Item(o.getArtist(), o.getTitle(), o.getPath(), o.getFilename(), o.getDuration()))
+                .map(o -> new Item(o.getArtist(), o.getTitle(), o.getPath(), o.getFilename(), Math.round(o.getDuration())))
                 .forEach(p -> {
                     c.computeIfAbsent(p.artist.toLowerCase(), k -> new ArrayList<>());
                     c.get(p.artist.toLowerCase()).add(p);
@@ -91,14 +90,14 @@ public class FileObjectService {
 
     public void checkMissingFiles(String basePath) {
         var fileObjects = list(basePath);
-        int[] maxSize = new int[]{fileObjects.size()};
-        if (maxSize[0] == 0) {
+        int size = fileObjects.size();
+        if (size == 0) {
             return;
         }
-        try (ProgressBar pb = new ProgressBar("checkMissingFiles", maxSize[0])) {
+        try (ProgressBar pb = new ProgressBar("checkMissingFiles", size)) {
             fileObjects.stream().filter(fileObject -> {
                 if (_fileService.exists(fileObject)) {
-                    pb.maxHint(--maxSize[0]);
+                    pb.step();
                     return false;
                 }
                 return true;
@@ -112,22 +111,33 @@ public class FileObjectService {
     public void checkForNewFiles(String basePath) throws IOException {
         Path path = Path.of(basePath);
         var files = _fileService.countFiles(path);
-        long[] maxSize = new long[]{files};
-        try (ProgressBar pb = new ProgressBar("checkForNewFiles", maxSize[0])) {
+        StringBuilder sb = new StringBuilder();
+        try (ProgressBar pb = new ProgressBar("checkForNewFiles", files)) {
             _fileService.listFiles(path).filter(p -> {
-                if (getByFileAndPath(p.toFile().getName(), p.toFile().getParent()).isPresent()) {
-                    pb.maxHint(--maxSize[0]);
-                    return false;
-                }
-                return true;
-            }).map(_fileService::fileInformation).map(_fileService::asFileObject).forEach(fos -> {
-                pb.step();
-                try {
-                    create(fos);
-                } catch (Exception ex) {
-                    log.error("Could not create file {}/{}", fos.getPath(), fos.getFilename());
-                }
-            });
+                        if (getByFileAndPath(p.toFile().getName(), p.toFile().getParent()).isPresent()) {
+                            pb.step();
+                            return false;
+                        }
+                        return true;
+                    })
+                    .map(_fileService::fileInformation)
+                    .map(_fileService::asFileObject)
+                    .forEach(fos -> {
+                        pb.step();
+                        try {
+                            create(fos);
+                        } catch (Exception ex) {
+                            if (ex.getMessage().contains("hash_unique")) {
+                                var existing = _fileObjectRepository.findByHash(fos.getHash());
+                                sb.append("%s\n%s\n\n".formatted(
+                                        fos.fullPath(),
+                                        existing.fullPath()));
+                            } else {
+                                log.error("Could not create file: {}", fos.fullPath(), ex);
+                            }
+                        }
+                    });
+            System.out.println(sb);
         }
     }
 

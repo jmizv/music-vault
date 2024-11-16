@@ -79,6 +79,7 @@ ON file_object(path_,filename);
 
 CREATE INDEX file_object_artist
 ON file_object(artist);
+
 -- ###
 
 -- ###
