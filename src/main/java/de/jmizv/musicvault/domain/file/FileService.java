@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -64,7 +66,7 @@ public class FileService {
             formatMap.remove("size");
             formatMap.remove("filename");
             removePrivateTags((Map<String, Object>) formatMap.get("tags"), file);
-            return formatMap;
+            return output;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -77,8 +79,7 @@ public class FileService {
         Set<String> keysToRemove = map.keySet().stream()
                 .filter(key -> key.startsWith("id3v2_priv")).collect(Collectors.toSet());
         for (String key : keysToRemove) {
-            Object removed = map.remove(key);
-            log.info("Remove tag {} from file {} as it is private and has a size of {}.", key, path, String.valueOf(removed).length());
+            map.remove(key);
         }
     }
 
@@ -159,41 +160,42 @@ public class FileService {
 
             if (// image formats
                     !fileName.endsWith("jpg")
-                && !fileName.endsWith(".jpeg")
-                && !fileName.endsWith(".gif")
-                && !fileName.endsWith(".png")
-                && !fileName.endsWith(".tif")
-                && !fileName.endsWith(".tiff")
+                    && !fileName.endsWith(".jpeg")
+                    && !fileName.endsWith(".gif")
+                    && !fileName.endsWith(".png")
+                    && !fileName.endsWith(".tif")
+                    && !fileName.endsWith(".tiff")
 
-                // Text and other document files
-                && !fileName.endsWith(".ini")
-                && !fileName.endsWith(".txt")
-                && !fileName.endsWith(".pdf")
-                && !fileName.endsWith(".htm")
-                && !fileName.endsWith(".html")
-                && !fileName.endsWith(".doc")
-                && !fileName.endsWith(".docx")
-                && !fileName.endsWith(".rtf")
+                    // Text and other document files
+                    && !fileName.endsWith(".ini")
+                    && !fileName.endsWith(".txt")
+                    && !fileName.endsWith(".pdf")
+                    && !fileName.endsWith(".htm")
+                    && !fileName.endsWith(".html")
+                    && !fileName.endsWith(".doc")
+                    && !fileName.endsWith(".docx")
+                    && !fileName.endsWith(".rtf")
+                    && !fileName.endsWith(".url")
 
-                // Other stuff
-                && !fileName.endsWith(".message") // temporary
-                && !fileName.endsWith(".cue")
-                && !fileName.endsWith(".m3u")
-                && !fileName.endsWith(".nfo")
-                && !fileName.endsWith(".sfv")
+                    // Other stuff
+                    && !fileName.endsWith(".message") // temporary
+                    && !fileName.endsWith(".cue")
+                    && !fileName.endsWith(".m3u")
+                    && !fileName.endsWith(".nfo")
+                    && !fileName.endsWith(".sfv")
 
-                // Video formats
-                && !fileName.endsWith(".wmv")
-                && !fileName.endsWith(".mp4")
-                && !fileName.endsWith(".mpg")
-                && !fileName.endsWith(".mpeg")
-                && !fileName.endsWith(".mov")
-                && !fileName.endsWith(".rm")
-                && !fileName.endsWith(".asf")
+                    // Video formats
+                    && !fileName.endsWith(".wmv")
+                    && !fileName.endsWith(".mp4")
+                    && !fileName.endsWith(".mpg")
+                    && !fileName.endsWith(".mpeg")
+                    && !fileName.endsWith(".mov")
+                    && !fileName.endsWith(".rm")
+                    && !fileName.endsWith(".asf")
 
-                // unnecessary system files
-                && !fileName.endsWith("thumbs.db")
-                && !fileName.endsWith(".ds_store")
+                    // unnecessary system files
+                    && !fileName.endsWith("thumbs.db")
+                    && !fileName.endsWith(".ds_store")
             ) {
                 System.out.println("\t -> File \"" + f + "\" is not a MP3 file (size=" + f.toFile().length() + ")");
             }
@@ -215,18 +217,19 @@ public class FileService {
         if (metadata.isEmpty()) {
             return fo;
         }
-        fo.setFormatName(asString(metadata.get("format_name")));
-        fo.setFormatLongName(asString(metadata.get("format_long_name")));
-        fo.setBitRate(asInteger(metadata.get("bit_rate")));
-        fo.setDuration(asDouble(metadata.get("duration")));
-        fo.setNbStreams(asDouble(metadata.get("nb_streams")));
-        fo.setNbPrograms(asDouble(metadata.get("nb_programs")));
-        fo.setProbeScore(asDouble(metadata.get("probe_score")));
-        fo.setNbStreamGroups(asDouble(metadata.get("nb_stream_groups")));
-        fo.setStartTime(asDouble(metadata.get("start_time")));
+        var formatMetadata = (Map<String, Object>) metadata.get("format");
+        fo.setFormatName(asString(formatMetadata.get("format_name")));
+        fo.setFormatLongName(asString(formatMetadata.get("format_long_name")));
+        fo.setBitRate(asInteger(formatMetadata.get("bit_rate")));
+        fo.setDuration(asDouble(formatMetadata.get("duration")));
+        fo.setNbStreams(asDouble(formatMetadata.get("nb_streams")));
+        fo.setNbPrograms(asDouble(formatMetadata.get("nb_programs")));
+        fo.setProbeScore(asDouble(formatMetadata.get("probe_score")));
+        fo.setNbStreamGroups(asDouble(formatMetadata.get("nb_stream_groups")));
+        fo.setStartTime(asDouble(formatMetadata.get("start_time")));
 
-        Map<String, Object> tags = (Map<String, Object>) metadata.get("tags");
-        if (tags != null) {
+        Map<String, Object> tags = getFormatFromMap(metadata);
+        if (tags != null && !tags.isEmpty()) {
             fo.setArtist(asString(tags.get("artist")));
             fo.setTitle(asString(tags.get("title")));
             fo.setTrack(asString(tags.get("track")));
@@ -239,6 +242,28 @@ public class FileService {
         }
 
         return fo;
+    }
+
+    private Map<String, Object> getFormatFromMap(Map<String, Object> metadata) {
+        var formatMetadataObject = metadata.get("format");
+        if (formatMetadataObject instanceof Map formatMetadata && formatMetadata.containsKey("tags")) {
+            return (Map<String, Object>) formatMetadata.get("tags");
+        }
+        List<?> listOfStreams = (List<?>) metadata.get("streams");
+        return listOfStreams.stream().map(entry -> (Map<String, Object>) entry)
+                .filter(p -> p.containsKey("tags"))
+                .map(p -> p.get("tags"))
+                .map(p -> (Map<String, Object>) p)
+                .map(p -> {
+                    Map<String, Object> result = new HashMap<>();
+                    // add lowercase keys
+                    for (String keysOfMap : p.keySet()) {
+                        result.put(keysOfMap.toLowerCase(), p.get(keysOfMap));
+                        result.put(keysOfMap, p.get(keysOfMap));
+                    }
+                    return result;
+                })
+                .findFirst().orElse(Map.of());
     }
 
     public String hashOfFileObject(FileObject p) throws IOException {
