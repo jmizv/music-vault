@@ -21,8 +21,24 @@ The application supports currently:
   - `-c`
 - checking for new files (those will be added to the database)
   - `-n`
+- getting help on these parameters
+  - `-h`
+- creating a M3U8 file with the shortest song of each artist and write it to the given file
+  - `-m3u`
 
-Note that depending on the size of your Music collection, the whole process can take a plenty of time. 
+Note that depending on the size of your Music collection, the whole process can take a plenty of time.
+
+For reference, the help text:
+```shellscript
+usage: ./gradle bootRun
+ -c,--consistency   Check consistency of files
+ -h,--help          Prints this help
+ -m,--missing       Check for missing files and remove them from the
+                    database
+ -m3u <arg>         Creates a M3U8-playlist with the shortest song of each
+                    band sort by length
+ -n,--new           Check for new files and add them to the database
+```
 
 ## Details
 
