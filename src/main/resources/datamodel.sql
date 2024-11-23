@@ -82,7 +82,8 @@ ON file_object(artist);
 
 -- ###
 
--- ###
+
+-- ### Views
 
 CREATE VIEW simple_file_object AS select
   id,
