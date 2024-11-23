@@ -34,10 +34,17 @@ public class MainApplication implements CommandLineRunner {
         options.addOption(new Option("m", "missing", false, "Check for missing files and remove them from the database"));
         options.addOption(new Option("c", "consistency", false, "Check consistency of files"));
         options.addOption(new Option("n", "new", false, "Check for new files and add them to the database"));
+        options.addOption(new Option("m3u", true, "Creates a M3U8-playlist with the shortest song of each band sort by length and writes it to the given argument"));
         options.addOption(new Option("h", "help", false, "Prints this help"));
 
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
+
+        if (commandLine.hasOption("h")) {
+            var helpFormatter = new HelpFormatter();
+            helpFormatter.printHelp("ant", options);
+            return;
+        }
 
         if (commandLine.hasOption("m")) {
             _fileObjectService.checkMissingFiles(_basePath);
@@ -49,7 +56,8 @@ public class MainApplication implements CommandLineRunner {
             _fileObjectService.checkForNewFiles(_basePath);
         }
         if (commandLine.hasOption("m3u")) {
-            try (var pw = new PrintWriter(new FileWriter("c:\\Temp\\all.m3u8", StandardCharsets.UTF_8))) {
+            var argument = commandLine.getOptionValue("m3u");
+            try (var pw = new PrintWriter(new FileWriter(argument, StandardCharsets.UTF_8))) {
                 _fileObjectService.writeM3uWithShortestTracksOfEachArtist(_basePath, pw);
                 pw.flush();
             }
