@@ -1,7 +1,8 @@
-package de.jmizv.musicvault.infrastructure;
+package de.jmizv.musicvault.infrastructure.service;
 
 import de.jmizv.musicvault.domain.file.FileService;
 import de.jmizv.musicvault.infrastructure.model.FileObject;
+import de.jmizv.musicvault.infrastructure.repository.FileObjectRepository;
 import me.tongfei.progressbar.ProgressBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,14 +70,14 @@ public class FileObjectService {
                 .filter(o -> o.getDuration() >= 31)
                 .map(o -> new Item(o.getArtist(), o.getTitle(), o.getPath(), o.getFilename(), Math.round(o.getDuration())))
                 .forEach(p -> {
-                    c.computeIfAbsent(p.artist.toLowerCase(), k -> new ArrayList<>());
+                    c.computeIfAbsent(p.artist.toLowerCase(), _ -> new ArrayList<>());
                     c.get(p.artist.toLowerCase()).add(p);
                 });
 
         List<Item> items = new ArrayList<>();
         for (Map.Entry<String, List<Item>> entry : c.entrySet()) {
             entry.getValue().sort(Comparator.comparing(Item::duration));
-            items.add(entry.getValue().get(0));
+            items.add(entry.getValue().getFirst());
         }
         items.sort(Comparator.comparing(Item::duration));
         pw.println("#EXTM3U");

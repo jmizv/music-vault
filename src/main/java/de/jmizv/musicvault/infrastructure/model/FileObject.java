@@ -272,4 +272,13 @@ public class FileObject {
     public String fullPath() {
         return getPath() + File.separator + getFilename();
     }
+
+    @Override
+    public String toString() {
+        return "FileObject{" +
+               "path='" + path + '\'' +
+               ", filename='" + filename + '\'' +
+               ", fileSize=" + fileSize +
+               '}';
+    }
 }

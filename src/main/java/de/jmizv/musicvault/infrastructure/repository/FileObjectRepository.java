@@ -1,4 +1,4 @@
-package de.jmizv.musicvault.infrastructure;
+package de.jmizv.musicvault.infrastructure.repository;
 
 import de.jmizv.musicvault.infrastructure.model.FileObject;
 import org.springframework.data.jpa.repository.Query;
