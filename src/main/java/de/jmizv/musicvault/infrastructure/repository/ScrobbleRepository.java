@@ -11,4 +11,7 @@ public interface ScrobbleRepository extends JpaRepository<ScrobbleEntity, BigDec
 
   @NativeQuery("SELECT max(scrobble_date) FROM scrobble")
   Instant findMaxScrobbleDate();
+
+  @NativeQuery("SELECT min(scrobble_date) FROM scrobble")
+  Instant findMinScrobbleDate();
 }

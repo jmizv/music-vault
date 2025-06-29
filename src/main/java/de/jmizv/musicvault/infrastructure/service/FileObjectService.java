@@ -138,7 +138,9 @@ public class FileObjectService {
                             }
                         }
                     });
-            System.out.println(sb);
+            if (!sb.isEmpty()) {
+                System.out.println("The following files are duplicates as their hash is equal:\n" + sb);
+            }
         }
     }
 

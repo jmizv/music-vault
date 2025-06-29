@@ -173,6 +173,7 @@ public class FileService {
                     && !fileName.endsWith(".htm")
                     && !fileName.endsWith(".html")
                     && !fileName.endsWith(".doc")
+                    && !fileName.endsWith(".odt")
                     && !fileName.endsWith(".docx")
                     && !fileName.endsWith(".rtf")
                     && !fileName.endsWith(".url")
@@ -183,6 +184,7 @@ public class FileService {
                     && !fileName.endsWith(".m3u")
                     && !fileName.endsWith(".nfo")
                     && !fileName.endsWith(".sfv")
+                    && !fileName.endsWith(".gp4")
 
                     // Video formats
                     && !fileName.endsWith(".wmv")
@@ -192,6 +194,7 @@ public class FileService {
                     && !fileName.endsWith(".mov")
                     && !fileName.endsWith(".rm")
                     && !fileName.endsWith(".asf")
+                    && !fileName.endsWith(".avi")
 
                     // unnecessary system files
                     && !fileName.endsWith("thumbs.db")

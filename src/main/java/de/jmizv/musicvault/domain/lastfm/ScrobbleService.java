@@ -22,8 +22,16 @@ public class ScrobbleService {
     return toDomain(_scrobbleRepository.save(fromDomain(scrobble)));
   }
 
+  public List<Scrobble> create(List<Scrobble> scrobbles){
+    return _scrobbleRepository.saveAll(fromDomain(scrobbles)).stream().map(ScrobbleService::toDomain).toList();
+  }
+
   public Instant maxScrobbleDate() {
     return _scrobbleRepository.findMaxScrobbleDate();
+  }
+
+  public Instant minScrobbleDate() {
+    return _scrobbleRepository.findMinScrobbleDate();
   }
 
   public static ScrobbleEntity fromDomain(Scrobble scrobble) {
@@ -37,6 +45,10 @@ public class ScrobbleService {
     scrobbleEntity.setScrobbleDate(Instant.ofEpochSecond(scrobble.scrobbleDate()));
     scrobbleEntity.setId(scrobble.id());
     return scrobbleEntity;
+  }
+
+  public static List<ScrobbleEntity> fromDomain(List<Scrobble> scrobbles) {
+    return scrobbles.stream().map(ScrobbleService::fromDomain).toList();
   }
 
   public static Scrobble toDomain(ScrobbleEntity scrobbleEntity) {
